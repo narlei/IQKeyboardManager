@@ -321,7 +321,7 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
     //  Creating a toolBar for phoneNumber keyboard
     IQToolbar *toolbar = self.keyboardToolbar;
     
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
+    // Check iOS version at runtime
     if (@available(iOS 26.0, *))
     {
         // Use compact layout for iOS 26+
@@ -331,23 +331,29 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
                                           previousBarButtonConfiguration:previousBarButtonConfiguration 
                                               nextBarButtonConfiguration:nextBarButtonConfiguration];
         
-        UIBarButtonItem *compactItem = [[UIBarButtonItem alloc] initWithCustomView:compactView];
-        [toolbar setItems:@[compactItem]];
-        
-        //  Setting toolbar to keyboard.
-        [(UITextField*)self setInputAccessoryView:toolbar];
-        
-        if ([self respondsToSelector:@selector(keyboardAppearance)])
+        if (compactView)
         {
-            switch ([(UITextField*)self keyboardAppearance])
+            // Center the compact view in the toolbar
+            compactView.center = CGPointMake(toolbar.bounds.size.width / 2, toolbar.bounds.size.height / 2);
+            compactView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+            
+            UIBarButtonItem *compactItem = [[UIBarButtonItem alloc] initWithCustomView:compactView];
+            [toolbar setItems:@[compactItem]];
+            
+            //  Setting toolbar to keyboard.
+            [(UITextField*)self setInputAccessoryView:toolbar];
+            
+            if ([self respondsToSelector:@selector(keyboardAppearance)])
             {
-                case UIKeyboardAppearanceDark:  toolbar.barStyle = UIBarStyleBlack;     break;
-                default:                        toolbar.barStyle = UIBarStyleDefault;   break;
+                switch ([(UITextField*)self keyboardAppearance])
+                {
+                    case UIKeyboardAppearanceDark:  toolbar.barStyle = UIBarStyleBlack;     break;
+                    default:                        toolbar.barStyle = UIBarStyleDefault;   break;
+                }
             }
+            return;
         }
-        return;
     }
-#endif
     
     NSMutableArray<UIBarButtonItem*> *items = [[NSMutableArray alloc] init];
     

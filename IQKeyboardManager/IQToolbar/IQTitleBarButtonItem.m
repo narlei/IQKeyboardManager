@@ -50,13 +50,11 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
         _titleButton = [UIButton buttonWithType:UIButtonTypeSystem];
         _titleButton.enabled = NO;
         
-        #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
         if (@available(iOS 26.0, *))
         {
             _titleButton.titleLabel.numberOfLines = 1;
         }
         else
-        #endif
         {
             _titleButton.titleLabel.numberOfLines = 3;
         }
@@ -76,13 +74,11 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
         [_titleButton.titleLabel setTextAlignment:NSTextAlignmentCenter];
         [self setTitle:title];
         
-        #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
         if (@available(iOS 26.0, *))
         {
             [self setTitleFont:[UIFont systemFontOfSize:11.0]];
         }
         else
-        #endif
         {
             [self setTitleFont:[UIFont systemFontOfSize:13.0]];
         }

@@ -134,7 +134,15 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
 {
     CGSize sizeThatFit = [super sizeThatFits:size];
 
-    sizeThatFit.height = 44;
+    if (@available(iOS 26.0, *))
+    {
+        // More spacing from keyboard on iOS 26+
+        sizeThatFit.height = 50;
+    }
+    else
+    {
+        sizeThatFit.height = 44;
+    }
     
     return sizeThatFit;
 }

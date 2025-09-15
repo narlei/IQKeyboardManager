@@ -134,7 +134,17 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
 {
     CGSize sizeThatFit = [super sizeThatFits:size];
 
-    sizeThatFit.height = 44;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
+    if (@available(iOS 26.0, *))
+    {
+        // Compact height for iOS 26+
+        sizeThatFit.height = 36;
+    }
+    else
+#endif
+    {
+        sizeThatFit.height = 44;
+    }
     
     return sizeThatFit;
 }

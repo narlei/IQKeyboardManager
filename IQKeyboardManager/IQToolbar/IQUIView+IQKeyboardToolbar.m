@@ -25,6 +25,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
+#import <QuartzCore/QuartzCore.h>
 
 #import "IQUIView+IQKeyboardToolbar.h"
 #import "IQKeyboardManagerConstantsInternal.h"
@@ -210,6 +211,108 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
 
 #pragma mark - Common
 
+- (UIView *)createCompactToolbarViewWithTarget:(id)target 
+                                     titleText:(NSString*)titleText 
+                      rightBarButtonConfiguration:(IQBarButtonItemConfiguration*)rightBarButtonConfiguration 
+                  previousBarButtonConfiguration:(IQBarButtonItemConfiguration*)previousBarButtonConfiguration 
+                      nextBarButtonConfiguration:(IQBarButtonItemConfiguration*)nextBarButtonConfiguration
+{
+    // Create a container view for compact layout
+    UIView *containerView = [[UIView alloc] init];
+    
+    // Apply visual styling similar to iOS autofill toolbar
+    #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 130000
+    if (@available(iOS 13.0, *))
+    {
+        containerView.backgroundColor = [UIColor secondarySystemBackgroundColor];
+    }
+    else
+    #endif
+    {
+        containerView.backgroundColor = [UIColor colorWithRed:0.95 green:0.95 blue:0.97 alpha:1.0];
+    }
+    
+    containerView.layer.cornerRadius = 10.0;
+    containerView.layer.masksToBounds = YES;
+    
+    CGFloat buttonSize = 28.0;
+    CGFloat spacing = 8.0;
+    CGFloat currentX = spacing;
+    
+    // Previous button
+    if (previousBarButtonConfiguration) {
+        UIButton *prevButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        prevButton.frame = CGRectMake(currentX, 4, buttonSize, buttonSize);
+        
+        if (previousBarButtonConfiguration.image) {
+            [prevButton setImage:previousBarButtonConfiguration.image forState:UIControlStateNormal];
+        } else {
+            // Use the default previous image
+            [prevButton setImage:[UIImage keyboardPreviousImage] forState:UIControlStateNormal];
+        }
+        
+        [prevButton addTarget:target action:previousBarButtonConfiguration.action forControlEvents:UIControlEventTouchUpInside];
+        prevButton.accessibilityLabel = previousBarButtonConfiguration.accessibilityLabel;
+        [containerView addSubview:prevButton];
+        currentX += buttonSize + spacing/2;
+    }
+    
+    // Next button
+    if (nextBarButtonConfiguration) {
+        UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        nextButton.frame = CGRectMake(currentX, 4, buttonSize, buttonSize);
+        
+        if (nextBarButtonConfiguration.image) {
+            [nextButton setImage:nextBarButtonConfiguration.image forState:UIControlStateNormal];
+        } else {
+            // Use the default next image
+            [nextButton setImage:[UIImage keyboardNextImage] forState:UIControlStateNormal];
+        }
+        
+        [nextButton addTarget:target action:nextBarButtonConfiguration.action forControlEvents:UIControlEventTouchUpInside];
+        nextButton.accessibilityLabel = nextBarButtonConfiguration.accessibilityLabel;
+        [containerView addSubview:nextButton];
+        currentX += buttonSize + spacing;
+    }
+    
+    // Title label
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.text = titleText;
+    titleLabel.font = [UIFont systemFontOfSize:11.0];
+    titleLabel.textColor = [UIColor secondaryLabelColor];
+    titleLabel.textAlignment = NSTextAlignmentCenter;
+    titleLabel.numberOfLines = 1;
+    [titleLabel sizeToFit];
+    
+    CGFloat titleWidth = MIN(titleLabel.frame.size.width, 150.0);
+    titleLabel.frame = CGRectMake(currentX, 4, titleWidth, 28);
+    [containerView addSubview:titleLabel];
+    currentX += titleWidth + spacing;
+    
+    // Right button (Done)
+    if (rightBarButtonConfiguration) {
+        UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        
+        if (rightBarButtonConfiguration.title) {
+            [rightButton setTitle:rightBarButtonConfiguration.title forState:UIControlStateNormal];
+            rightButton.titleLabel.font = [UIFont systemFontOfSize:15.0 weight:UIFontWeightMedium];
+            [rightButton sizeToFit];
+            rightButton.frame = CGRectMake(currentX, 4, rightButton.frame.size.width + 16, 28);
+        } else if (rightBarButtonConfiguration.image) {
+            [rightButton setImage:rightBarButtonConfiguration.image forState:UIControlStateNormal];
+            rightButton.frame = CGRectMake(currentX, 4, buttonSize, buttonSize);
+        }
+        
+        [rightButton addTarget:target action:rightBarButtonConfiguration.action forControlEvents:UIControlEventTouchUpInside];
+        rightButton.accessibilityLabel = rightBarButtonConfiguration.accessibilityLabel;
+        [containerView addSubview:rightButton];
+        currentX += rightButton.frame.size.width + spacing;
+    }
+    
+    containerView.frame = CGRectMake(0, 0, currentX, 36);
+    return containerView;
+}
+
 - (void)addKeyboardToolbarWithTarget:(id)target titleText:(NSString*)titleText rightBarButtonConfiguration:(IQBarButtonItemConfiguration*)rightBarButtonConfiguration previousBarButtonConfiguration:(IQBarButtonItemConfiguration*)previousBarButtonConfiguration nextBarButtonConfiguration:(IQBarButtonItemConfiguration*)nextBarButtonConfiguration
 {
     //If can't set InputAccessoryView. Then return
@@ -217,6 +320,34 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
     
     //  Creating a toolBar for phoneNumber keyboard
     IQToolbar *toolbar = self.keyboardToolbar;
+    
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 260000
+    if (@available(iOS 26.0, *))
+    {
+        // Use compact layout for iOS 26+
+        UIView *compactView = [self createCompactToolbarViewWithTarget:target 
+                                                             titleText:titleText 
+                                              rightBarButtonConfiguration:rightBarButtonConfiguration 
+                                          previousBarButtonConfiguration:previousBarButtonConfiguration 
+                                              nextBarButtonConfiguration:nextBarButtonConfiguration];
+        
+        UIBarButtonItem *compactItem = [[UIBarButtonItem alloc] initWithCustomView:compactView];
+        [toolbar setItems:@[compactItem]];
+        
+        //  Setting toolbar to keyboard.
+        [(UITextField*)self setInputAccessoryView:toolbar];
+        
+        if ([self respondsToSelector:@selector(keyboardAppearance)])
+        {
+            switch ([(UITextField*)self keyboardAppearance])
+            {
+                case UIKeyboardAppearanceDark:  toolbar.barStyle = UIBarStyleBlack;     break;
+                default:                        toolbar.barStyle = UIBarStyleDefault;   break;
+            }
+        }
+        return;
+    }
+#endif
     
     NSMutableArray<UIBarButtonItem*> *items = [[NSMutableArray alloc] init];
     

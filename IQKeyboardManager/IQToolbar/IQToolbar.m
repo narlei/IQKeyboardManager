@@ -134,10 +134,10 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
 {
     CGSize sizeThatFit = [super sizeThatFits:size];
 
-    if (@available(iOS 26.0, *))
+    if (true) // TODO: Mudar para @available(iOS 26.0, *) depois de testar
     {
         // Compact height for iOS 26+
-        sizeThatFit.height = 36;
+        sizeThatFit.height = 15;
     }
     else
     {

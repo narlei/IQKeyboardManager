@@ -322,8 +322,10 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
     IQToolbar *toolbar = self.keyboardToolbar;
     
     // Check iOS version at runtime
-    if (@available(iOS 26.0, *))
+    NSLog(@"IQKeyboardManager: Checking iOS version for toolbar layout");
+    if (true) // TODO: Mudar para @available(iOS 26.0, *) depois de testar
     {
+        NSLog(@"IQKeyboardManager: iOS 26+ detected, using compact layout");
         // Use compact layout for iOS 26+
         UIView *compactView = [self createCompactToolbarViewWithTarget:target 
                                                              titleText:titleText 
@@ -355,6 +357,7 @@ NS_EXTENSION_UNAVAILABLE_IOS("Unavailable in extension")
         }
     }
     
+    NSLog(@"IQKeyboardManager: Using standard layout (iOS < 26)");
     NSMutableArray<UIBarButtonItem*> *items = [[NSMutableArray alloc] init];
     
     if(previousBarButtonConfiguration)
